@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from "react";
 
 import { Comment } from "../Comment";
 import { Avatar } from "../Avatar";
@@ -9,6 +9,9 @@ import ptBR from "date-fns/locale/pt-BR";
 import styles from "./styles.module.css";
 
 export function Postagem({ author, publishedAt, content }) {
+  const [comments, setComments] = useState(["Post muito bacana, hein?!"]);
+  const [newCommentText, setNewCommentText] = useState("");
+
   // const publishedDateFormatted = new Intl.DateTimeFormat("pt-BR", {
   //   day: "2-digit",
   //   month: "long",
@@ -17,7 +20,9 @@ export function Postagem({ author, publishedAt, content }) {
   // }).format(publishedAt);
 
   const publishedDateFormatted = format(
-    publishedAt, "d 'de' LLLL 'às' HH:mm'h'", {locale: ptBR}
+    publishedAt,
+    "d 'de' LLLL 'às' HH:mm'h'",
+    { locale: ptBR }
   );
 
   const publishedDateRelativeToNow = formatDistanceToNow(publishedAt, {
@@ -25,13 +30,29 @@ export function Postagem({ author, publishedAt, content }) {
     addSuffix: true,
   });
 
-  const [comments, setComments] = useState([1, 2]);
-
   function handleCrateNewComment() {
     event.preventDefault();
 
-    setComments([...comments, comments.length + 1]);
+    setComments([...comments, newCommentText]);
+    setNewCommentText("");
   }
+
+  function handleNewCommentChange() {
+    event.target.setCustomValidity("");
+    setNewCommentText(event.target.value);
+  }
+
+  function handleNewCommentInvalid() {
+    event.target.setCustomValidity("Esse campo é obrigatório");
+  }
+  function deleteComment(commentToDelete) {
+    const commentsWithoutDeleteddOne = comments.filter((comment) => {
+      return comment !== commentToDelete;
+    });
+
+    setComments(commentsWithoutDeleteddOne);
+  }
+const isNewCommentEmpty = newCommentText.length === 0
   return (
     <article className={styles.post}>
       <header>
@@ -54,10 +75,10 @@ export function Postagem({ author, publishedAt, content }) {
       <div className={styles.content}>
         {content.map((line) => {
           if (line.type === "paragraph") {
-            return <p>{line.content}</p>;
+            return <p key={line.content}>{line.content}</p>;
           } else if (line.type === "link") {
             return (
-              <p>
+              <p key={line.content}>
                 <a href="">{line.content}</a>
               </p>
             );
@@ -68,15 +89,33 @@ export function Postagem({ author, publishedAt, content }) {
       <form onSubmit={handleCrateNewComment} className={styles.comentForm}>
         <strong>Deixe seu feedback</strong>
 
-        <textarea placeholder="deixe um comentário" />
+        <textarea
+          name="comment"
+          value={newCommentText}
+          placeholder="deixe um comentário"
+          onChange={handleNewCommentChange}
+          onInvalid={handleNewCommentInvalid}
+          required
+        />
         <footer>
-          <button type="submit"> Publicar</button>
+          <button 
+            type="submit" 
+            disabled={isNewCommentEmpty}
+          >
+            Publicar
+          </button>
         </footer>
       </form>
 
       <div className={styles.commentList}>
         {comments.map((comment) => {
-          return <Comment />;
+          return (
+            <Comment
+              key={comment}
+              content={comment}
+              onDeleteComment={deleteComment}
+            />
+          );
         })}
       </div>
     </article>
